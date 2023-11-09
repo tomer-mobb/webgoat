@@ -22,6 +22,7 @@
 
 package org.owasp.webgoat.lessons.sqlinjection.mitigation;
 
+import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -70,9 +71,12 @@ public class Servers {
     try (var connection = dataSource.getConnection()) {
       try (var statement =
           connection.prepareStatement(
-              "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out"
-                  + " of order' order by "
-                  + column)) {
+              "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out of order' order by ?")) {
+        try {
+            statement.setInt(1, Math.round(Float.parseFloat(column)));
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
         try (var rs = statement.executeQuery()) {
           while (rs.next()) {
             Server server =
